@@ -2,15 +2,13 @@
   "kind": "Template",
   "apiVersion": "v1",
   "metadata": {
-    "name": "python-static",
+    "name": "chained-builds",
     "annotations": {
-      "description": "A Python application serving static files",
-      "tags": "instant-app,python",
-      "iconClass": "icon-python"
+      "description": "An example application with chained builds"
     }
   },
   "labels": {
-    "template": "python-static"
+    "template": "chained-builds"
   },
   "objects": [
   ],
@@ -18,7 +16,7 @@
     {
       "name": "SOURCE_REPOSITORY_URL",
       "description": "The URL of the repository with your application source code",
-      "value": "https://github.com/rhcarvalho/python-static-ex.git"
+      "value": "https://github.com/rhcarvalho/chained-builds-ex.git"
     },
     {
       "name": "SOURCE_REPOSITORY_REF",

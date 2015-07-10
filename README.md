@@ -1,4 +1,3 @@
-# python-static-ex
+# chained-builds-ex
 
-Test app for Python on OpenShift v3, serving static files for simplicity.
-Meant to exercise chaining builds.
+Test app for chained builds on OpenShift v3.

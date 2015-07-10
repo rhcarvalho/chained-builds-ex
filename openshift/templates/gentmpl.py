@@ -14,7 +14,7 @@ def add_deployment_hook(deploymentconfig, i):
         "pre": {
             "failurePolicy": "Abort",
             "execNewPod": {
-                "containerName": "python-static",
+                "containerName": "chained-builds",
                 "command": [
                     "sh", "-c", """
 WEBHOOK_URL="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/osapi/v1beta3/namespaces/$TARGET_BUILDCONFIG_NAMESPACE/buildconfigs/$TARGET_BUILDCONFIG_NAME/webhooks/$GENERIC_WEBHOOK_SECRET/generic";
@@ -28,7 +28,7 @@ test `curl -skXPOST -w %{http_code} $WEBHOOK_URL` = 200 || >&2 echo -e "FAILURE:
                     },
                     {
                         "name": "TARGET_BUILDCONFIG_NAME",
-                        "value": "python-static-app{}".format(i+1)
+                        "value": "chained-builds-app{}".format(i+1)
                     },
                     {
                         "name": "GENERIC_WEBHOOK_SECRET",
@@ -45,7 +45,7 @@ def generate_app_objects(app):
         "kind": "Service",
         "apiVersion": "v1",
         "metadata": {
-            "name": "python-{}-frontend".format(app),
+            "name": "chain-{}-frontend".format(app),
             "annotations": {
                 "description": "Exposes and load balances the application pods"
             }
@@ -59,7 +59,7 @@ def generate_app_objects(app):
                 }
             ],
             "selector": {
-                "name": "python-{}-frontend".format(app)
+                "name": "chain-{}-frontend".format(app)
             }
         }
     }
@@ -67,7 +67,7 @@ def generate_app_objects(app):
         "kind": "ImageStream",
         "apiVersion": "v1",
         "metadata": {
-            "name": "python-static-{}".format(app),
+            "name": "chained-builds-{}".format(app),
             "annotations": {
                 "description": "Keeps track of changes in the application image"
             }
@@ -77,7 +77,7 @@ def generate_app_objects(app):
         "kind": "BuildConfig",
         "apiVersion": "v1",
         "metadata": {
-            "name": "python-static-{}".format(app),
+            "name": "chained-builds-{}".format(app),
             "annotations": {
                 "description": "Defines how to build the application"
             }
@@ -103,7 +103,7 @@ def generate_app_objects(app):
             "output": {
                 "to": {
                     "kind": "ImageStreamTag",
-                    "name": "python-static-{}:latest".format(app)
+                    "name": "chained-builds-{}:latest".format(app)
                 }
             },
             "triggers": [
@@ -123,7 +123,7 @@ def generate_app_objects(app):
         "kind": "DeploymentConfig",
         "apiVersion": "v1",
         "metadata": {
-            "name": "python-{}-frontend".format(app),
+            "name": "chain-{}-frontend".format(app),
             "annotations": {
                 "description": "Defines how to deploy the application server"
             }
@@ -138,11 +138,11 @@ def generate_app_objects(app):
                     "imageChangeParams": {
                         "automatic": True,
                         "containerNames": [
-                            "python-static"
+                            "chained-builds"
                         ],
                         "from": {
                             "kind": "ImageStreamTag",
-                            "name": "python-static-{}:latest".format(app)
+                            "name": "chained-builds-{}:latest".format(app)
                         }
                     }
                 },
@@ -152,20 +152,20 @@ def generate_app_objects(app):
             ],
             "replicas": 1,
             "selector": {
-                "name": "python-{}-frontend".format(app)
+                "name": "chain-{}-frontend".format(app)
             },
             "template": {
                 "metadata": {
-                    "name": "python-{}-frontend".format(app),
+                    "name": "chain-{}-frontend".format(app),
                     "labels": {
-                        "name": "python-{}-frontend".format(app)
+                        "name": "chain-{}-frontend".format(app)
                     }
                 },
                 "spec": {
                     "containers": [
                         {
-                            "name": "python-static",
-                            "image": "python-static-{}".format(app),
+                            "name": "chained-builds",
+                            "image": "chained-builds-{}".format(app),
                             "ports": [
                                 {
                                     "containerPort": 8080
@@ -183,7 +183,7 @@ def generate_app_objects(app):
 if __name__ == "__main__":
     import json
     import os.path
-    with open(os.path.join(os.path.dirname(__file__), "python-static.json")) as f:
+    with open(os.path.join(os.path.dirname(__file__), "chained-builds.json")) as f:
         tmpl = json.load(f)
         create_chained_builds(tmpl, 5)
         print(json.dumps(tmpl))
