@@ -1,4 +1,46 @@
-def objects(app):
+"""Quick and dirty OpenShift template generator for chained builds."""
+
+
+def create_chained_builds(base_template, chain_length):
+    for i in xrange(1, chain_length+1):
+        objs = generate_app_objects("app{}".format(i))
+        if i < chain_length:
+            add_deployment_hook(objs[-1], i)
+        tmpl["objects"].extend(objs)
+
+
+def add_deployment_hook(deploymentconfig, i):
+    deploymentconfig["spec"]["strategy"]["rollingParams"] = {
+        "pre": {
+            "failurePolicy": "Abort",
+            "execNewPod": {
+                "containerName": "python-static",
+                "command": [
+                    "sh", "-c", """
+WEBHOOK_URL="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/osapi/v1beta3/namespaces/$TARGET_BUILDCONFIG_NAMESPACE/buildconfigs/$TARGET_BUILDCONFIG_NAME/webhooks/$GENERIC_WEBHOOK_SECRET/generic";
+test `curl -skXPOST -w %{http_code} $WEBHOOK_URL` = 200 || >&2 echo -e "FAILURE: call to generic webhook trigger for BuildConfig $TARGET_BUILDCONFIG_NAMESPACE/$TARGET_BUILDCONFIG_NAME failed.\nWebhook URL: $WEBHOOK_URL"
+"""
+                ],
+                "env": [
+                    {
+                        "name": "TARGET_BUILDCONFIG_NAMESPACE",
+                        "value": "demo"
+                    },
+                    {
+                        "name": "TARGET_BUILDCONFIG_NAME",
+                        "value": "python-static-app{}".format(i+1)
+                    },
+                    {
+                        "name": "GENERIC_WEBHOOK_SECRET",
+                        "value": "${GENERIC_WEBHOOK_SECRET}"
+                    }
+                ]
+            }
+        }
+    }
+
+
+def generate_app_objects(app):
     service = {
         "kind": "Service",
         "apiVersion": "v1",
@@ -21,7 +63,6 @@ def objects(app):
             }
         }
     }
-
     imagestream = {
         "kind": "ImageStream",
         "apiVersion": "v1",
@@ -32,7 +73,6 @@ def objects(app):
             }
         }
     }
-
     buildconfig = {
         "kind": "BuildConfig",
         "apiVersion": "v1",
@@ -49,7 +89,7 @@ def objects(app):
                     "uri": "${SOURCE_REPOSITORY_URL}",
                     "ref": "${SOURCE_REPOSITORY_REF}"
                 },
-                "contextDir": app
+                "contextDir": "app1"
             },
             "strategy": {
                 "type": "Docker",
@@ -79,7 +119,6 @@ def objects(app):
             ]
         }
     }
-
     deploymentconfig = {
         "kind": "DeploymentConfig",
         "apiVersion": "v1",
@@ -138,7 +177,6 @@ def objects(app):
             }
         }
     }
-
     return [service, imagestream, buildconfig, deploymentconfig]
 
 
@@ -147,24 +185,5 @@ if __name__ == "__main__":
     import os.path
     with open(os.path.join(os.path.dirname(__file__), "python-static.json")) as f:
         tmpl = json.load(f)
-        objs = objects("app1")
-        # objs[-1]["spec"]["strategy"]["rollingParams"] = {
-        #     "pre": {
-        #         "failurePolicy": "Abort",
-        #         "execNewPod": {
-        #             "containerName": "python-static",
-        #             "command": [
-        #                 "curl", "http://<openshift_api_host:port>/osapi/v1/namespaces/<namespace>/buildconfigs/<name>/webhooks/<secret>/generic"
-        #             ],
-        #             "env": [
-        #                 {
-        #                 "name": "CUSTOM_VAR1",
-        #                 "value": "custom_value1"
-        #                 }
-        #             ]
-        #         }
-        #     }
-        # }
-        tmpl["objects"].extend(objs)
-        tmpl["objects"].extend(objects("app2"))
+        create_chained_builds(tmpl, 5)
         print(json.dumps(tmpl))
