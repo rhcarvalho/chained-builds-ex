@@ -96,7 +96,7 @@ def generate_app_objects(app):
                 "dockerStrategy": {
                     "from": {
                         "kind": "DockerImage",
-                        "name": "rhcarvalho/httpecho"
+                        "name": "rhcarvalho/httphostname"
                     }
                 }
             },
