@@ -89,7 +89,7 @@ def generate_app_objects(app):
                     "uri": "${SOURCE_REPOSITORY_URL}",
                     "ref": "${SOURCE_REPOSITORY_REF}"
                 },
-                "contextDir": "app1"
+                "contextDir": "app"
             },
             "strategy": {
                 "type": "Docker",
