@@ -52,12 +52,11 @@ def objects(app):
                 "contextDir": app
             },
             "strategy": {
-                "type": "Source",
-                "sourceStrategy": {
+                "type": "Docker",
+                "dockerStrategy": {
                     "from": {
-                        "kind": "ImageStreamTag",
-                        "namespace": "openshift",
-                        "name": "python:3.3"
+                        "kind": "DockerImage",
+                        "name": "rhcarvalho/httpecho"
                     }
                 }
             },
@@ -72,14 +71,8 @@ def objects(app):
                     "type": "ImageChange"
                 },
                 {
-                    "type": "GitHub",
-                    "github": {
-                        "secret": "${GITHUB_WEBHOOK_SECRET}"
-                    }
-                },
-                {
                     "type": "Generic",
-                    "github": {
+                    "generic": {
                         "secret": "${GENERIC_WEBHOOK_SECRET}"
                     }
                 }
@@ -91,7 +84,7 @@ def objects(app):
         "kind": "DeploymentConfig",
         "apiVersion": "v1",
         "metadata": {
-            "name": "python-frontend",
+            "name": "python-{}-frontend".format(app),
             "annotations": {
                 "description": "Defines how to deploy the application server"
             }
@@ -120,13 +113,13 @@ def objects(app):
             ],
             "replicas": 1,
             "selector": {
-                "name": "python-frontend"
+                "name": "python-{}-frontend".format(app)
             },
             "template": {
                 "metadata": {
-                    "name": "python-frontend",
+                    "name": "python-{}-frontend".format(app),
                     "labels": {
-                        "name": "python-frontend"
+                        "name": "python-{}-frontend".format(app)
                     }
                 },
                 "spec": {
