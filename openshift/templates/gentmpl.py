@@ -183,7 +183,12 @@ def generate_app_objects(app):
 if __name__ == "__main__":
     import json
     import os.path
+    import sys
+    try:
+        chain_length = int(sys.argv[1])
+    except (ValueError, IndexError):
+        chain_length = 2
     with open(os.path.join(os.path.dirname(__file__), "chained-builds.json")) as f:
         tmpl = json.load(f)
-        create_chained_builds(tmpl, 5)
+        create_chained_builds(tmpl, chain_length)
         print(json.dumps(tmpl))
