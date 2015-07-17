@@ -92,13 +92,7 @@ def generate_app_objects(app):
                 "contextDir": "app"
             },
             "strategy": {
-                "type": "Docker",
-                "dockerStrategy": {
-                    "from": {
-                        "kind": "DockerImage",
-                        "name": "rhcarvalho/httphostname"
-                    }
-                }
+                "type": "Docker"
             },
             "output": {
                 "to": {
