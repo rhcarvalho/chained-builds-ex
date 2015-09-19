@@ -102,9 +102,6 @@ def generate_app_objects(app):
             },
             "triggers": [
                 {
-                    "type": "ImageChange"
-                },
-                {
                     "type": "Generic",
                     "generic": {
                         "secret": "${GENERIC_WEBHOOK_SECRET}"
